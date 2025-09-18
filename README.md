@@ -28,13 +28,11 @@ A WordPress Gutenberg block for creating responsive image galleries with lightbo
 - WordPress 5.0+
 - PHP 7.4+
 
-## Author
+## Images
 
-Fabian Eppens
+<img width="1641" height="881" alt="afbeelding" src="https://github.com/user-attachments/assets/f1d2caa4-b093-48b4-b578-12e493c32098" />
+<img width="1917" height="902" alt="afbeelding" src="https://github.com/user-attachments/assets/9277799f-8b7c-4922-b9b0-8d3083f097cd" />
 
-## Version
-
-1.0.0
 
 ## License
 
