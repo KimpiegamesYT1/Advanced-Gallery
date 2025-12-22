@@ -15,6 +15,7 @@
         currentIndex: 0,
         $lightbox: null,
         isTransitioning: false,
+        imageCache: {},
 
         /**
          * Initialize lightbox functionality
@@ -64,20 +65,24 @@
                 }
             });
             
-            // Navigation buttons
-            $('.lightbox-prev').on('click', function(e) {
+            // Navigation buttons - use event delegation for better performance
+            this.$lightbox.on('click', '.lightbox-prev', function(e) {
                 e.stopPropagation();
-                self.previousImage();
+                if (!self.isTransitioning) {
+                    self.previousImage();
+                }
             });
             
-            $('.lightbox-next').on('click', function(e) {
+            this.$lightbox.on('click', '.lightbox-next', function(e) {
                 e.stopPropagation();
-                self.nextImage();
+                if (!self.isTransitioning) {
+                    self.nextImage();
+                }
             });
             
-            // Keyboard navigation
+            // Keyboard navigation - instant response
             $(document).on('keydown.lightbox', function(e) {
-                if (self.$lightbox.hasClass('active')) {
+                if (self.$lightbox.hasClass('active') && !self.isTransitioning) {
                     switch(e.keyCode) {
                         case 27: // ESC
                             self.closeLightbox();
@@ -135,13 +140,6 @@
             // Hide lightbox after animation completes
             setTimeout(function() {
                 self.$lightbox.css('display', 'none');
-            }, 300);
-            
-            // Clean up event listeners
-            $('.lightbox-image').off('.lightbox');
-            
-            // Reset image after closing
-            setTimeout(function() {
                 $('.lightbox-image').attr('src', '').attr('alt', '');
             }, 300);
         },
@@ -150,7 +148,7 @@
          * Show previous image
          */
         previousImage: function() {
-            if (!this.isTransitioning && this.currentGallery.length > 1) {
+            if (this.currentGallery.length > 1) {
                 this.currentIndex = (this.currentIndex > 0) ? this.currentIndex - 1 : this.currentGallery.length - 1;
                 this.showLightboxImage();
             }
@@ -160,39 +158,63 @@
          * Show next image
          */
         nextImage: function() {
-            if (!this.isTransitioning && this.currentGallery.length > 1) {
+            if (this.currentGallery.length > 1) {
                 this.currentIndex = (this.currentIndex < this.currentGallery.length - 1) ? this.currentIndex + 1 : 0;
                 this.showLightboxImage();
             }
         },
 
         /**
-         * Display current image in lightbox
+         * Preload adjacent images for instant switching
+         */
+        preloadAdjacentImages: function() {
+            const self = this;
+            const nextIndex = (this.currentIndex < this.currentGallery.length - 1) ? this.currentIndex + 1 : 0;
+            const prevIndex = (this.currentIndex > 0) ? this.currentIndex - 1 : this.currentGallery.length - 1;
+            
+            [nextIndex, prevIndex].forEach(function(index) {
+                const item = self.currentGallery[index];
+                if (item && !self.imageCache[item.src]) {
+                    const img = new Image();
+                    img.onload = function() {
+                        self.imageCache[item.src] = true;
+                    };
+                    img.src = item.src;
+                }
+            });
+        },
+
+        /**
+         * Display current image in lightbox with instant response
          */
         showLightboxImage: function() {
             if (!this.currentGallery[this.currentIndex]) {
                 return;
             }
             
-            this.isTransitioning = true;
+            const self = this;
             const item = this.currentGallery[this.currentIndex];
             const $image = $('.lightbox-image');
             
-            // Set new image src
-            $image.attr('src', item.src).attr('alt', item.title || '');
+            // Brief transition lock (150ms) for smooth fade
+            this.isTransitioning = true;
+            setTimeout(function() {
+                self.isTransitioning = false;
+            }, 150);
             
-            // When new image loads
-            $image.on('load.lightbox', function() {
-                this.isTransitioning = false;
-            }.bind(this)).on('error.lightbox', function() {
-                console.error('Error loading image:', item.src);
-                this.isTransitioning = false;
-            }.bind(this));
+            // Fade out current image
+            $image.css('opacity', '0');
             
-            // If image is already cached, the load event might not fire
-            if ($image[0].complete) {
-                this.isTransitioning = false;
-            }
+            // Quick switch to new image
+            setTimeout(function() {
+                $image.attr('src', item.src).attr('alt', item.title || '');
+                
+                // Fade in new image
+                $image.css('opacity', '1');
+                
+                // Preload next/previous images
+                self.preloadAdjacentImages();
+            }, 100);
             
             // Show/hide navigation based on gallery length
             $('.lightbox-prev, .lightbox-next').toggle(this.currentGallery.length > 1);

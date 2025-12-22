@@ -47,7 +47,10 @@ class AdvancedGalleryBlock {
                 'lazyLoad' => ['type' => 'boolean', 'default' => true],
                 'animation' => ['type' => 'string', 'default' => 'none'],
                 'borderRadius' => ['type' => 'number', 'default' => 0],
-                'customClass' => ['type' => 'string', 'default' => '']
+                'customClass' => ['type' => 'string', 'default' => ''],
+                'aspectRatio' => ['type' => 'string', 'default' => 'auto'],
+                'minColumnWidth' => ['type' => 'number', 'default' => 250],
+                'enableMasonry' => ['type' => 'boolean', 'default' => true]
             )
         ));
 
@@ -85,6 +88,8 @@ class AdvancedGalleryBlock {
         $enableLightbox = $attributes['enableLightbox'] ?? true;
         $lazyLoad = $attributes['lazyLoad'] ?? true;
         $showCaptions = $attributes['showCaptions'] ?? false;
+        $aspectRatio = $attributes['aspectRatio'] ?? 'auto';
+        $enableMasonry = $attributes['enableMasonry'] ?? true;
 
         // Ensure numeric values
         $columns = max(1, intval($attributes['columns'] ?? 3));
@@ -93,6 +98,7 @@ class AdvancedGalleryBlock {
         $gap = max(0, intval($attributes['gap'] ?? 10));
         $gapMobile = max(0, intval($attributes['gapMobile'] ?? 10));
         $borderRadius = max(0, intval($attributes['borderRadius'] ?? 0));
+        $minColumnWidth = max(100, intval($attributes['minColumnWidth'] ?? 250));
 
         $gallery_id = 'advanced-gallery-' . uniqid();
         
@@ -110,12 +116,18 @@ class AdvancedGalleryBlock {
             '--columns-mobile: ' . $columnsMobile,
             '--gap-desktop: ' . $gap . 'px',
             '--gap-mobile: ' . $gapMobile . 'px',
-            '--border-radius: ' . $borderRadius . 'px'
+            '--border-radius: ' . $borderRadius . 'px',
+            '--aspect-ratio: ' . esc_attr($aspectRatio),
+            '--min-column-width: ' . $minColumnWidth . 'px'
         ];
 
         ob_start();
         ?>
-        <div id="<?php echo esc_attr($gallery_id); ?>" class="<?php echo esc_attr(implode(' ', $classes)); ?>" style="<?php echo esc_attr(implode('; ', $style_vars)); ?>">
+        <div id="<?php echo esc_attr($gallery_id); ?>" 
+             class="<?php echo esc_attr(implode(' ', $classes)); ?>" 
+             style="<?php echo esc_attr(implode('; ', $style_vars)); ?>"
+             role="region"
+             aria-label="<?php esc_attr_e('Image gallery', 'advanced-gallery-block'); ?>">
             <?php foreach ($images as $index => $image):
                 $img_id = $image['id'];
                 $img_url = wp_get_attachment_image_url($img_id, 'large');
@@ -126,10 +138,20 @@ class AdvancedGalleryBlock {
                 // Ensure we have valid URLs
                 if (!$img_url) continue;
                 if (!$img_full_url) $img_full_url = $img_url;
+                
+                // Fallback alt text
+                if (empty($img_alt)) {
+                    $img_alt = $img_caption ?: sprintf(__('Gallery image %d', 'advanced-gallery-block'), $index + 1);
+                }
                 ?>
-                <div class="gallery-item" data-index="<?php echo $index; ?>">
+                <div class="gallery-item" data-index="<?php echo $index; ?>" role="group" aria-label="<?php echo esc_attr(sprintf(__('Image %d of %d', 'advanced-gallery-block'), $index + 1, count($images))); ?>">
                     <?php if ($enableLightbox): ?>
-                        <a href="<?php echo esc_url($img_full_url); ?>" class="gallery-link" data-lightbox="<?php echo esc_attr($gallery_id); ?>" data-title="<?php echo esc_attr($img_caption); ?>">
+                        <a href="<?php echo esc_url($img_full_url); ?>" 
+                           class="gallery-link" 
+                           data-lightbox="<?php echo esc_attr($gallery_id); ?>" 
+                           data-title="<?php echo esc_attr($img_caption); ?>"
+                           aria-label="<?php echo esc_attr(sprintf(__('Open image %d in lightbox: %s', 'advanced-gallery-block'), $index + 1, $img_alt)); ?>"
+                           role="button">
                     <?php endif; ?>
                     
                     <div class="image-container">
