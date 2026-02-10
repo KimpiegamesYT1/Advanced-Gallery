@@ -197,12 +197,20 @@ class AdvancedGalleryBlock {
                 // Build image attributes — wp_get_attachment_image() generates
                 // srcset, sizes, width, height automatically and is compatible
                 // with image-optimization plugins (WebP/AVIF converters).
+                //
+                // First images (above the fold) get fetchpriority="high" and
+                // eager loading to optimize LCP. The rest get lazy loading.
+                $is_above_fold = $index < $columns;
+
                 $img_attrs = array(
                     'class'   => 'agb-gallery-image',
-                    'loading' => $lazy_load ? 'lazy' : 'eager',
+                    'loading' => ( $lazy_load && ! $is_above_fold ) ? 'lazy' : 'eager',
                     'alt'     => $img_alt,
                 );
-                if ( $lazy_load ) {
+
+                if ( $is_above_fold ) {
+                    $img_attrs['fetchpriority'] = 'high';
+                } elseif ( $lazy_load ) {
                     $img_attrs['decoding'] = 'async';
                 }
                 ?>

@@ -47,9 +47,15 @@
                 '<div class="agb-lightbox-container">' +
                     '<img class="agb-lightbox-image" src="" alt="">' +
                 '</div>' +
-                '<button class="agb-lightbox-close" aria-label="Close lightbox">&times;</button>' +
-                '<button class="agb-lightbox-prev" aria-label="Previous image">&lsaquo;</button>' +
-                '<button class="agb-lightbox-next" aria-label="Next image">&rsaquo;</button>';
+                '<button class="agb-lightbox-close" aria-label="Close lightbox">' +
+                    '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>' +
+                '</button>' +
+                '<button class="agb-lightbox-prev" aria-label="Previous image">' +
+                    '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>' +
+                '</button>' +
+                '<button class="agb-lightbox-next" aria-label="Next image">' +
+                    '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>' +
+                '</button>';
 
             document.body.appendChild(overlay);
             this.overlay = overlay;
