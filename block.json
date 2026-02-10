@@ -2,12 +2,12 @@
     "$schema": "https://schemas.wp.org/trunk/block.json",
     "apiVersion": 3,
     "name": "advanced-gallery/gallery-block",
-    "version": "1.0.0",
+    "version": "2.0.0",
     "title": "Advanced Gallery",
     "category": "media",
     "icon": "format-gallery",
-    "description": "An advanced gallery block with responsive settings, multiple layouts, and lightbox functionality.",
-    "keywords": [ "gallery", "images", "photos" ],
+    "description": "Een geavanceerde galerij block met responsive instellingen, meerdere layouts en lightbox.",
+    "keywords": [ "galerij", "afbeeldingen", "fotos" ],
     "supports": {
         "align": true,
         "html": false
@@ -53,10 +53,6 @@
             "type": "string",
             "default": "none"
         },
-        "lazyLoad": {
-            "type": "boolean",
-            "default": true
-        },
         "animation": {
             "type": "string",
             "default": "none"
@@ -68,14 +64,6 @@
         "customClass": {
             "type": "string",
             "default": ""
-        },
-        "aspectRatio": {
-            "type": "string",
-            "default": "auto"
-        },
-        "minColumnWidth": {
-            "type": "number",
-            "default": 250
         },
         "enableMasonry": {
             "type": "boolean",

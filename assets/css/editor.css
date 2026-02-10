@@ -1,19 +1,8 @@
-/* ==========================================================================
-   Advanced Gallery Block — Editor-Only Styles
-
-   NOTE: frontend.css (the block "style") is also loaded in the editor.
-   This file contains only editor-specific overrides and additions.
-   ========================================================================== */
-
-/* ---------- Upload Button ---------- */
-
 .agb-editor .agb-editor-button {
     width: 100%;
     height: 150px;
     font-size: 16px;
 }
-
-/* ---------- Gallery Preview Wrapper ---------- */
 
 .agb-editor .agb-preview-wrapper {
     padding: 15px;
@@ -46,13 +35,9 @@
     color: #555;
 }
 
-/* ---------- Block Margin Reset ---------- */
-
 .wp-block-advanced-gallery-gallery-block {
     margin: 0;
 }
-
-/* ---------- Disable Interactive Elements in Editor ---------- */
 
 .agb-gallery .agb-gallery-item {
     cursor: default;
@@ -65,8 +50,6 @@
 .agb-hover-overlay {
     display: none !important;
 }
-
-/* ---------- Responsive Device Preview ---------- */
 
 .is-mobile .agb-gallery {
     grid-template-columns: repeat(var(--agb-columns-mobile, 1), 1fr) !important;

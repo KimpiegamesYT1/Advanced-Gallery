@@ -1,7 +1,7 @@
 {
     "name": "advanced-gallery-block",
-    "version": "1.0.0",
-    "description": "An advanced gallery block for WordPress Gutenberg with responsive settings, multiple layouts, and lightbox.",
+    "version": "2.0.0",
+    "description": "Een geavanceerde galerij block voor WordPress Gutenberg met responsive instellingen, meerdere layouts en lightbox.",
     "author": "FlorisWebDesign",
     "license": "GPL-2.0-or-later",
     "private": true,
@@ -10,7 +10,6 @@
         "start": "wp-scripts start",
         "lint:css": "wp-scripts lint-style 'assets/css/**/*.css' 'assets/modules/**/*.css'",
         "lint:js": "wp-scripts lint-js 'assets/js/**/*.js' 'assets/modules/**/*.js'",
-        "i18n:pot": "wp i18n make-pot . languages/advanced-gallery-block.pot --domain=advanced-gallery-block",
         "plugin-zip": "wp-scripts plugin-zip"
     },
     "devDependencies": {

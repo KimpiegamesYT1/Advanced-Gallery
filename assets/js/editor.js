@@ -1,10 +1,4 @@
-/**
- * Advanced Gallery Block — Editor Script
- *
- * Registers the block client-side with edit/save functions.
- * Attributes are defined in block.json.
- */
-(function (blocks, blockEditor, components, element, i18n) {
+(function (blocks, blockEditor, components, element) {
     var registerBlockType = blocks.registerBlockType;
     var MediaUpload       = blockEditor.MediaUpload;
     var MediaUploadCheck  = blockEditor.MediaUploadCheck;
@@ -17,21 +11,15 @@
     var Button        = components.Button;
     var el            = element.createElement;
     var Fragment      = element.Fragment;
-    var __            = i18n.__;
 
     registerBlockType('advanced-gallery/gallery-block', {
-        title: __('Advanced Gallery', 'advanced-gallery-block'),
+        title: 'Advanced Gallery',
         icon: 'format-gallery',
         category: 'media',
-        keywords: [
-            __('gallery', 'advanced-gallery-block'),
-            __('images', 'advanced-gallery-block'),
-            __('photos', 'advanced-gallery-block'),
-        ],
-        description: __('An advanced gallery with responsive settings and lightbox.', 'advanced-gallery-block'),
+        keywords: ['galerij', 'afbeeldingen', 'fotos'],
+        description: 'Een geavanceerde galerij met responsive instellingen en lightbox.',
         supports: { align: true, html: false },
 
-        /* ------------------------------------------------------------------ */
         edit: function (props) {
             var attr = props.attributes;
             var set  = props.setAttributes;
@@ -45,96 +33,94 @@
             };
 
             var hoverEffectOptions = [
-                { label: __('None', 'advanced-gallery-block'), value: 'none' },
-                { label: __('Zoom', 'advanced-gallery-block'), value: 'zoom' },
-                { label: __('Fade', 'advanced-gallery-block'), value: 'fade' },
-                { label: __('Blur', 'advanced-gallery-block'), value: 'blur' },
+                { label: 'Geen', value: 'none' },
+                { label: 'Zoom', value: 'zoom' },
+                { label: 'Fade', value: 'fade' },
+                { label: 'Blur', value: 'blur' },
             ];
 
             var animationOptions = [
-                { label: __('None', 'advanced-gallery-block'),     value: 'none' },
-                { label: __('Fade In', 'advanced-gallery-block'),  value: 'fadeIn' },
-                { label: __('Slide Up', 'advanced-gallery-block'), value: 'slideUp' },
-                { label: __('Zoom In', 'advanced-gallery-block'),  value: 'zoomIn' },
+                { label: 'Geen',       value: 'none' },
+                { label: 'Fade In',    value: 'fadeIn' },
+                { label: 'Schuif Omhoog', value: 'slideUp' },
+                { label: 'Zoom In',    value: 'zoomIn' },
             ];
 
             return el(Fragment, {},
-                /* ----- Inspector sidebar ----- */
                 el(InspectorControls, {},
-                    el(PanelBody, { title: __('Layout Settings', 'advanced-gallery-block') },
+                    el(PanelBody, { title: 'Layout Instellingen' },
                         el(RangeControl, {
-                            label: __('Columns (Desktop)', 'advanced-gallery-block'),
+                            label: 'Kolommen (Desktop)',
                             value: attr.columns,
                             onChange: function (v) { set({ columns: v }); },
                             min: 1, max: 6,
                         }),
                         el(RangeControl, {
-                            label: __('Columns (Tablet)', 'advanced-gallery-block'),
+                            label: 'Kolommen (Tablet)',
                             value: attr.columnsTablet,
                             onChange: function (v) { set({ columnsTablet: v }); },
                             min: 1, max: 4,
                         }),
                         el(RangeControl, {
-                            label: __('Columns (Mobile)', 'advanced-gallery-block'),
+                            label: 'Kolommen (Mobiel)',
                             value: attr.columnsMobile,
                             onChange: function (v) { set({ columnsMobile: v }); },
                             min: 1, max: 3,
                         })
                     ),
-                    el(PanelBody, { title: __('Spacing', 'advanced-gallery-block') },
+                    el(PanelBody, { title: 'Afstanden' },
                         el(RangeControl, {
-                            label: __('Gap (Desktop)', 'advanced-gallery-block'),
+                            label: 'Afstand (Desktop)',
                             value: attr.gap,
                             onChange: function (v) { set({ gap: v }); },
                             min: 0, max: 50,
                         }),
                         el(RangeControl, {
-                            label: __('Gap (Mobile)', 'advanced-gallery-block'),
+                            label: 'Afstand (Mobiel)',
                             value: attr.gapMobile,
                             onChange: function (v) { set({ gapMobile: v }); },
                             min: 0, max: 30,
                         })
                     ),
-                    el(PanelBody, { title: __('Visual Effects', 'advanced-gallery-block') },
+                    el(PanelBody, { title: 'Visuele Effecten' },
                         el(SelectControl, {
-                            label: __('Hover Effect', 'advanced-gallery-block'),
+                            label: 'Hover Effect',
                             value: attr.hoverEffect,
                             options: hoverEffectOptions,
                             onChange: function (v) { set({ hoverEffect: v }); },
                         }),
                         el(SelectControl, {
-                            label: __('Animation', 'advanced-gallery-block'),
+                            label: 'Animatie',
                             value: attr.animation,
                             options: animationOptions,
                             onChange: function (v) { set({ animation: v }); },
                         }),
                         el(RangeControl, {
-                            label: __('Border Radius', 'advanced-gallery-block'),
+                            label: 'Hoekafronding',
                             value: attr.borderRadius,
                             onChange: function (v) { set({ borderRadius: v }); },
                             min: 0, max: 50,
                         })
                     ),
-                    el(PanelBody, { title: __('Functionality', 'advanced-gallery-block') },
+                    el(PanelBody, { title: 'Functionaliteit' },
                         el(ToggleControl, {
-                            label: __('Enable Lightbox', 'advanced-gallery-block'),
+                            label: 'Lightbox Inschakelen',
                             checked: attr.enableLightbox,
                             onChange: function (v) { set({ enableLightbox: v }); },
                         }),
                         el(ToggleControl, {
-                            label: __('Show Captions', 'advanced-gallery-block'),
+                            label: 'Bijschriften Tonen',
                             checked: attr.showCaptions,
                             onChange: function (v) { set({ showCaptions: v }); },
                         }),
                         el(TextControl, {
-                            label: __('Custom CSS Class', 'advanced-gallery-block'),
+                            label: 'Aangepaste CSS Klasse',
                             value: attr.customClass,
                             onChange: function (v) { set({ customClass: v }); },
                         })
                     )
                 ),
 
-                /* ----- Block content ----- */
                 el('div', { className: 'agb-editor' },
                     attr.images.length === 0
                         ? el(MediaUploadCheck, {},
@@ -148,7 +134,7 @@
                                         isPrimary: true,
                                         onClick: ref.open,
                                         className: 'agb-editor-button',
-                                    }, __('Select Images', 'advanced-gallery-block'));
+                                    }, 'Afbeeldingen Selecteren');
                                 },
                             })
                           )
@@ -178,7 +164,7 @@
                                         return el(Button, {
                                             isSecondary: true,
                                             onClick: ref.open,
-                                        }, __('Edit Images', 'advanced-gallery-block'));
+                                        }, 'Afbeeldingen Bewerken');
                                     },
                                 })
                             )
@@ -187,9 +173,8 @@
             );
         },
 
-        /* ------------------------------------------------------------------ */
         save: function () {
-            return null; // Server-side rendering via PHP.
+            return null;
         },
     });
 
@@ -197,6 +182,5 @@
     window.wp.blocks,
     window.wp.blockEditor,
     window.wp.components,
-    window.wp.element,
-    window.wp.i18n
+    window.wp.element
 );

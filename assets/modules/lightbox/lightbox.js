@@ -1,13 +1,3 @@
-/**
- * Advanced Gallery Block — Lightbox Module
- *
- * Vanilla JS lightbox with:
- *   - Keyboard navigation (Escape / ArrowLeft / ArrowRight)
- *   - Touch swipe support for mobile
- *   - Focus trapping (WCAG compliant)
- *   - Adjacent image preloading
- *   - No jQuery dependency
- */
 (function () {
     'use strict';
 
@@ -20,10 +10,6 @@
         touchStartX: 0,
         touchEndX: 0,
         previousFocus: null,
-
-        /* ------------------------------------------------------------------ */
-        /* Initialization                                                      */
-        /* ------------------------------------------------------------------ */
 
         init: function () {
             if (!document.querySelector('.agb-lightbox-enabled')) {
@@ -42,18 +28,18 @@
             overlay.className = 'agb-lightbox-overlay';
             overlay.setAttribute('role', 'dialog');
             overlay.setAttribute('aria-modal', 'true');
-            overlay.setAttribute('aria-label', 'Image lightbox');
+            overlay.setAttribute('aria-label', 'Afbeelding lightbox');
             overlay.innerHTML =
                 '<div class="agb-lightbox-container">' +
                     '<img class="agb-lightbox-image" src="" alt="">' +
                 '</div>' +
-                '<button class="agb-lightbox-close" aria-label="Close lightbox">' +
+                '<button class="agb-lightbox-close" aria-label="Lightbox sluiten">' +
                     '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>' +
                 '</button>' +
-                '<button class="agb-lightbox-prev" aria-label="Previous image">' +
+                '<button class="agb-lightbox-prev" aria-label="Vorige afbeelding">' +
                     '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>' +
                 '</button>' +
-                '<button class="agb-lightbox-next" aria-label="Next image">' +
+                '<button class="agb-lightbox-next" aria-label="Volgende afbeelding">' +
                     '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>' +
                 '</button>';
 
@@ -61,14 +47,9 @@
             this.overlay = overlay;
         },
 
-        /* ------------------------------------------------------------------ */
-        /* Event binding                                                       */
-        /* ------------------------------------------------------------------ */
-
         bindEvents: function () {
             var self = this;
 
-            // Open lightbox on gallery link click.
             document.addEventListener('click', function (e) {
                 var link = e.target.closest('.agb-lightbox-enabled .agb-gallery-link');
                 if (link) {
@@ -77,18 +58,16 @@
                 }
             });
 
-            // Close on backdrop or close-button click.
             this.overlay.addEventListener('click', function (e) {
                 if (
                     e.target === self.overlay ||
-                    e.target.classList.contains('agb-lightbox-close') ||
+                    e.target.closest('.agb-lightbox-close') ||
                     e.target.classList.contains('agb-lightbox-container')
                 ) {
                     self.close();
                 }
             });
 
-            // Navigation buttons.
             this.overlay.querySelector('.agb-lightbox-prev').addEventListener('click', function (e) {
                 e.stopPropagation();
                 if (!self.isTransitioning) { self.prev(); }
@@ -99,7 +78,6 @@
                 if (!self.isTransitioning) { self.next(); }
             });
 
-            // Keyboard navigation — uses e.key (not deprecated e.keyCode).
             document.addEventListener('keydown', function (e) {
                 if (!self.overlay.classList.contains('agb-active')) { return; }
 
@@ -119,7 +97,6 @@
                 }
             });
 
-            // Touch / swipe support.
             this.overlay.addEventListener('touchstart', function (e) {
                 self.touchStartX = e.changedTouches[0].screenX;
             }, { passive: true });
@@ -130,10 +107,6 @@
             }, { passive: true });
         },
 
-        /* ------------------------------------------------------------------ */
-        /* Swipe handling                                                      */
-        /* ------------------------------------------------------------------ */
-
         handleSwipe: function () {
             var threshold = 50;
             var diff = this.touchStartX - this.touchEndX;
@@ -141,15 +114,11 @@
             if (Math.abs(diff) < threshold) { return; }
 
             if (diff > 0) {
-                this.next();  // Swipe left → next image.
+                this.next();
             } else {
-                this.prev();  // Swipe right → previous image.
+                this.prev();
             }
         },
-
-        /* ------------------------------------------------------------------ */
-        /* Focus trapping (WCAG)                                               */
-        /* ------------------------------------------------------------------ */
 
         trapFocus: function (e) {
             var focusable = this.overlay.querySelectorAll(
@@ -174,16 +143,11 @@
             }
         },
 
-        /* ------------------------------------------------------------------ */
-        /* Open / Close                                                        */
-        /* ------------------------------------------------------------------ */
-
         open: function (clickedLink) {
             var galleryId = clickedLink.dataset.lightbox;
             var self = this;
             this.currentGallery = [];
 
-            // Build gallery array from all links sharing the same data-lightbox id.
             document.querySelectorAll('[data-lightbox="' + galleryId + '"]').forEach(function (link) {
                 self.currentGallery.push({
                     src: link.href,
@@ -194,9 +158,7 @@
             var item = clickedLink.closest('.agb-gallery-item');
             this.currentIndex = item ? parseInt(item.dataset.index, 10) || 0 : 0;
 
-            // Store current focus for restoration on close.
             this.previousFocus = document.activeElement;
-
             this.showImage();
 
             this.overlay.style.display = 'flex';
@@ -222,17 +184,12 @@
                     img.src = '';
                     img.alt = '';
                 }
-                // Restore focus to the element that opened the lightbox.
                 if (self.previousFocus) {
                     self.previousFocus.focus();
                     self.previousFocus = null;
                 }
             }, 300);
         },
-
-        /* ------------------------------------------------------------------ */
-        /* Navigation                                                          */
-        /* ------------------------------------------------------------------ */
 
         prev: function () {
             if (this.currentGallery.length <= 1) { return; }
@@ -249,10 +206,6 @@
                 : 0;
             this.showImage();
         },
-
-        /* ------------------------------------------------------------------ */
-        /* Image display & preloading                                          */
-        /* ------------------------------------------------------------------ */
 
         preloadAdjacent: function () {
             var self = this;
@@ -279,11 +232,9 @@
             var self  = this;
             var image = this.overlay.querySelector('.agb-lightbox-image');
 
-            // Brief transition lock for smooth fade.
             this.isTransitioning = true;
             setTimeout(function () { self.isTransitioning = false; }, 150);
 
-            // Fade out → swap → fade in.
             image.style.opacity = '0';
             setTimeout(function () {
                 image.src = item.src;
@@ -292,16 +243,11 @@
                 self.preloadAdjacent();
             }, 100);
 
-            // Show / hide navigation based on gallery size.
             var showNav = this.currentGallery.length > 1;
             this.overlay.querySelector('.agb-lightbox-prev').style.display = showNav ? '' : 'none';
             this.overlay.querySelector('.agb-lightbox-next').style.display = showNav ? '' : 'none';
         },
     };
-
-    /* ---------------------------------------------------------------------- */
-    /* Auto-initialize                                                        */
-    /* ---------------------------------------------------------------------- */
 
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', function () { AGBLightbox.init(); });

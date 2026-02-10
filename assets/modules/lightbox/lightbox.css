@@ -1,14 +1,10 @@
-/* ==========================================================================
-   Advanced Gallery Block — Lightbox Styles
-   ========================================================================== */
-
 .agb-lightbox-overlay {
     position: fixed;
     top: 0;
     left: 0;
     width: 100vw;
+    height: 100vh;
     height: 100dvh;
-    height: 100vh; /* fallback for older browsers */
     background: rgba(0, 0, 0, 0.85);
     z-index: 999999;
     display: none;
@@ -29,8 +25,6 @@
     opacity: 1;
 }
 
-/* ---------- Container ---------- */
-
 .agb-lightbox-container {
     position: relative;
     width: 100%;
@@ -42,8 +36,6 @@
     box-sizing: border-box;
 }
 
-/* ---------- Image ---------- */
-
 .agb-lightbox-image {
     max-width: 100%;
     max-height: 100%;
@@ -54,8 +46,6 @@
     transition: opacity 0.15s ease-in-out;
     opacity: 1;
 }
-
-/* ---------- Close Button ---------- */
 
 .agb-lightbox-close {
     position: fixed;
@@ -74,8 +64,6 @@
     padding: 0;
     transition: opacity 0.2s ease;
 }
-
-/* ---------- Navigation Arrows ---------- */
 
 .agb-lightbox-prev,
 .agb-lightbox-next {
@@ -102,15 +90,12 @@
 .agb-lightbox-prev { left: 20px; }
 .agb-lightbox-next { right: 20px; }
 
-/* ---------- Mobile Adjustments ---------- */
-
 @media (max-width: 768px) {
     .agb-lightbox-close {
         top: 10px;
         right: 10px;
         width: 45px;
         height: 45px;
-        font-size: 25px;
     }
 
     .agb-lightbox-container {
@@ -135,8 +120,6 @@
         transform: scale(0.95);
     }
 }
-
-/* ---------- Accessibility: Reduced Motion ---------- */
 
 @media (prefers-reduced-motion: reduce) {
     .agb-lightbox-overlay,
