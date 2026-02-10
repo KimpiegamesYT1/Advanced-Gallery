@@ -137,9 +137,15 @@ class AdvancedGalleryBlock {
 
                 $img_attrs = array(
                     'class'   => 'agb-gallery-image',
-                    'loading' => 'eager',
+                    'loading' => $index < $columns ? 'eager' : 'lazy',
                     'alt'     => $img_alt,
                 );
+
+                if ( $index < $columns ) {
+                    $img_attrs['fetchpriority'] = 'high';
+                } else {
+                    $img_attrs['decoding'] = 'async';
+                }
                 ?>
                 <div class="agb-gallery-item"
                      data-index="<?php echo esc_attr( $index ); ?>"
