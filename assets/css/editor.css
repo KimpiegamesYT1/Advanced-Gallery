@@ -1,25 +1,40 @@
-.advanced-gallery-editor .editor-gallery-button {
+/* ==========================================================================
+   Advanced Gallery Block — Editor-Only Styles
+
+   NOTE: frontend.css (the block "style") is also loaded in the editor.
+   This file contains only editor-specific overrides and additions.
+   ========================================================================== */
+
+/* ---------- Upload Button ---------- */
+
+.agb-editor .agb-editor-button {
     width: 100%;
     height: 150px;
     font-size: 16px;
 }
-.advanced-gallery-editor .gallery-preview-wrapper {
+
+/* ---------- Gallery Preview Wrapper ---------- */
+
+.agb-editor .agb-preview-wrapper {
     padding: 15px;
     background-color: #f0f0f0;
     border: 1px solid #ddd;
     border-radius: 4px;
 }
-.advanced-gallery-editor .gallery-preview {
+
+.agb-editor .agb-preview {
     display: grid;
     margin-bottom: 15px;
 }
-.advanced-gallery-editor .gallery-preview img {
+
+.agb-editor .agb-preview img {
     width: 100%;
     height: 100px;
     object-fit: cover;
     border-radius: 3px;
 }
-.advanced-gallery-editor .more-images-indicator {
+
+.agb-editor .agb-more-indicator {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -30,88 +45,34 @@
     font-weight: bold;
     color: #555;
 }
+
+/* ---------- Block Margin Reset ---------- */
+
 .wp-block-advanced-gallery-gallery-block {
     margin: 0;
 }
 
-.advanced-gallery {
-    display: grid;
-    gap: var(--gap-desktop, 10px);
-    grid-template-columns: repeat(var(--columns-desktop, 3), 1fr);
-    margin: 0;
-    padding: 0;
-    grid-auto-rows: 1px;
-    grid-auto-flow: dense;
-}
+/* ---------- Disable Interactive Elements in Editor ---------- */
 
-/* Editor responsive preview */
-.is-mobile .advanced-gallery {
-    grid-template-columns: repeat(var(--columns-mobile, 1), 1fr) !important;
-    gap: var(--gap-mobile, 10px) !important;
-}
-
-.is-tablet .advanced-gallery {
-    grid-template-columns: repeat(var(--columns-tablet, 2), 1fr) !important;
-}
-
-.gallery-item {
-    position: relative;
-    overflow: hidden;
-    border-radius: var(--border-radius, 0px);
-    background: #f5f5f5;
-}
-
-.image-container {
-    position: relative;
-    width: 100%;
-    overflow: hidden;
-    border-radius: var(--border-radius, 0px);
-}
-
-.image-container img {
-    width: 100%;
-    height: auto;
-    display: block;
-    object-fit: cover;
-    aspect-ratio: auto;
-    transition: transform 0.3s ease;
-}
-
-.gallery-caption {
-    padding: 10px;
-    background: #f9f9f9;
-    font-size: 14px;
-    text-align: center;
-    border-radius: 0 0 var(--border-radius, 0px) var(--border-radius, 0px);
-}
-
-/* Editor specific styles */
-.advanced-gallery .gallery-item {
+.agb-gallery .agb-gallery-item {
     cursor: default;
 }
 
-.advanced-gallery .gallery-link {
+.agb-gallery .agb-gallery-link {
     pointer-events: none;
 }
 
-.hover-overlay {
+.agb-hover-overlay {
     display: none !important;
 }
 
-/* Device preview buttons */
-.editor-device-preview {
-    margin-bottom: 20px;
+/* ---------- Responsive Device Preview ---------- */
+
+.is-mobile .agb-gallery {
+    grid-template-columns: repeat(var(--agb-columns-mobile, 1), 1fr) !important;
+    gap: var(--agb-gap-mobile, 10px) !important;
 }
 
-.editor-device-preview button {
-    margin-right: 10px;
-    padding: 5px 10px;
-    border: 1px solid #ccc;
-    background: #f7f7f7;
-    cursor: pointer;
-}
-
-.editor-device-preview button.active {
-    background: #0073aa;
-    color: white;
+.is-tablet .agb-gallery {
+    grid-template-columns: repeat(var(--agb-columns-tablet, 2), 1fr) !important;
 }

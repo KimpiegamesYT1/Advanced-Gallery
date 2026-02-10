@@ -1,182 +1,264 @@
 /**
- * Lightbox Module JavaScript
- * Advanced Gallery Block - Lightbox Functionality
- * 
- * Deze file bevat alle JavaScript voor de lightbox functionaliteit
- * van de Advanced Gallery Block plugin.
+ * Advanced Gallery Block — Lightbox Module
+ *
+ * Vanilla JS lightbox with:
+ *   - Keyboard navigation (Escape / ArrowLeft / ArrowRight)
+ *   - Touch swipe support for mobile
+ *   - Focus trapping (WCAG compliant)
+ *   - Adjacent image preloading
+ *   - No jQuery dependency
  */
-
-(function($) {
+(function () {
     'use strict';
 
-    // Lightbox namespace
-    window.AdvancedGalleryLightbox = {
+    var AGBLightbox = {
         currentGallery: [],
         currentIndex: 0,
-        $lightbox: null,
+        overlay: null,
         isTransitioning: false,
         imageCache: {},
+        touchStartX: 0,
+        touchEndX: 0,
+        previousFocus: null,
 
-        /**
-         * Initialize lightbox functionality
-         */
-        init: function() {
-            this.createLightboxHTML();
+        /* ------------------------------------------------------------------ */
+        /* Initialization                                                      */
+        /* ------------------------------------------------------------------ */
+
+        init: function () {
+            if (!document.querySelector('.agb-lightbox-enabled')) {
+                return;
+            }
+            this.createHTML();
             this.bindEvents();
         },
 
-        /**
-         * Create lightbox HTML structure if it doesn't exist
-         */
-        createLightboxHTML: function() {
-            if ($('.lightbox-overlay').length === 0) {
-                $('body').append(`
-                    <div class="lightbox-overlay">
-                        <div class="lightbox-container">
-                            <img class="lightbox-image" src="" alt="">
-                        </div>
-                        <button class="lightbox-close">×</button>
-                        <button class="lightbox-prev">‹</button>
-                        <button class="lightbox-next">›</button>
-                    </div>
-                `);
+        createHTML: function () {
+            if (document.querySelector('.agb-lightbox-overlay')) {
+                return;
             }
-            this.$lightbox = $('.lightbox-overlay');
+
+            var overlay = document.createElement('div');
+            overlay.className = 'agb-lightbox-overlay';
+            overlay.setAttribute('role', 'dialog');
+            overlay.setAttribute('aria-modal', 'true');
+            overlay.setAttribute('aria-label', 'Image lightbox');
+            overlay.innerHTML =
+                '<div class="agb-lightbox-container">' +
+                    '<img class="agb-lightbox-image" src="" alt="">' +
+                '</div>' +
+                '<button class="agb-lightbox-close" aria-label="Close lightbox">&times;</button>' +
+                '<button class="agb-lightbox-prev" aria-label="Previous image">&lsaquo;</button>' +
+                '<button class="agb-lightbox-next" aria-label="Next image">&rsaquo;</button>';
+
+            document.body.appendChild(overlay);
+            this.overlay = overlay;
         },
 
-        /**
-         * Bind all lightbox events
-         */
-        bindEvents: function() {
-            const self = this;
+        /* ------------------------------------------------------------------ */
+        /* Event binding                                                       */
+        /* ------------------------------------------------------------------ */
 
-            // Open lightbox when clicking a gallery item
-            $(document).on('click', '.advanced-gallery.lightbox-enabled .gallery-link', function(e) {
-                e.preventDefault();
-                self.openLightbox($(this));
-            });
-            
-            // Close on backdrop click or close button
-            this.$lightbox.on('click', function(e) {
-                if ($(e.target).is(self.$lightbox) || 
-                    $(e.target).hasClass('lightbox-close') || 
-                    $(e.target).hasClass('lightbox-container')) {
-                    self.closeLightbox();
+        bindEvents: function () {
+            var self = this;
+
+            // Open lightbox on gallery link click.
+            document.addEventListener('click', function (e) {
+                var link = e.target.closest('.agb-lightbox-enabled .agb-gallery-link');
+                if (link) {
+                    e.preventDefault();
+                    self.open(link);
                 }
             });
-            
-            // Navigation buttons - use event delegation for better performance
-            this.$lightbox.on('click', '.lightbox-prev', function(e) {
+
+            // Close on backdrop or close-button click.
+            this.overlay.addEventListener('click', function (e) {
+                if (
+                    e.target === self.overlay ||
+                    e.target.classList.contains('agb-lightbox-close') ||
+                    e.target.classList.contains('agb-lightbox-container')
+                ) {
+                    self.close();
+                }
+            });
+
+            // Navigation buttons.
+            this.overlay.querySelector('.agb-lightbox-prev').addEventListener('click', function (e) {
                 e.stopPropagation();
-                if (!self.isTransitioning) {
-                    self.previousImage();
-                }
+                if (!self.isTransitioning) { self.prev(); }
             });
-            
-            this.$lightbox.on('click', '.lightbox-next', function(e) {
+
+            this.overlay.querySelector('.agb-lightbox-next').addEventListener('click', function (e) {
                 e.stopPropagation();
-                if (!self.isTransitioning) {
-                    self.nextImage();
+                if (!self.isTransitioning) { self.next(); }
+            });
+
+            // Keyboard navigation — uses e.key (not deprecated e.keyCode).
+            document.addEventListener('keydown', function (e) {
+                if (!self.overlay.classList.contains('agb-active')) { return; }
+
+                switch (e.key) {
+                    case 'Escape':
+                        self.close();
+                        break;
+                    case 'ArrowLeft':
+                        if (!self.isTransitioning) { self.prev(); }
+                        break;
+                    case 'ArrowRight':
+                        if (!self.isTransitioning) { self.next(); }
+                        break;
+                    case 'Tab':
+                        self.trapFocus(e);
+                        break;
                 }
             });
-            
-            // Keyboard navigation - instant response
-            $(document).on('keydown.lightbox', function(e) {
-                if (self.$lightbox.hasClass('active') && !self.isTransitioning) {
-                    switch(e.keyCode) {
-                        case 27: // ESC
-                            self.closeLightbox();
-                            break;
-                        case 37: // Left arrow
-                            self.previousImage();
-                            break;
-                        case 39: // Right arrow
-                            self.nextImage();
-                            break;
-                    }
-                }
-            });
+
+            // Touch / swipe support.
+            this.overlay.addEventListener('touchstart', function (e) {
+                self.touchStartX = e.changedTouches[0].screenX;
+            }, { passive: true });
+
+            this.overlay.addEventListener('touchend', function (e) {
+                self.touchEndX = e.changedTouches[0].screenX;
+                self.handleSwipe();
+            }, { passive: true });
         },
 
-        /**
-         * Open lightbox with specific gallery item
-         */
-        openLightbox: function($clickedItem) {
-            const galleryId = $clickedItem.data('lightbox');
-            const self = this;
+        /* ------------------------------------------------------------------ */
+        /* Swipe handling                                                      */
+        /* ------------------------------------------------------------------ */
+
+        handleSwipe: function () {
+            var threshold = 50;
+            var diff = this.touchStartX - this.touchEndX;
+
+            if (Math.abs(diff) < threshold) { return; }
+
+            if (diff > 0) {
+                this.next();  // Swipe left → next image.
+            } else {
+                this.prev();  // Swipe right → previous image.
+            }
+        },
+
+        /* ------------------------------------------------------------------ */
+        /* Focus trapping (WCAG)                                               */
+        /* ------------------------------------------------------------------ */
+
+        trapFocus: function (e) {
+            var focusable = this.overlay.querySelectorAll(
+                'button:not([disabled]), [href], [tabindex]:not([tabindex="-1"])'
+            );
+
+            if (focusable.length === 0) { return; }
+
+            var first = focusable[0];
+            var last  = focusable[focusable.length - 1];
+
+            if (e.shiftKey) {
+                if (document.activeElement === first) {
+                    e.preventDefault();
+                    last.focus();
+                }
+            } else {
+                if (document.activeElement === last) {
+                    e.preventDefault();
+                    first.focus();
+                }
+            }
+        },
+
+        /* ------------------------------------------------------------------ */
+        /* Open / Close                                                        */
+        /* ------------------------------------------------------------------ */
+
+        open: function (clickedLink) {
+            var galleryId = clickedLink.dataset.lightbox;
+            var self = this;
             this.currentGallery = [];
-            
-            // Build gallery array
-            $(`[data-lightbox="${galleryId}"]`).each(function() {
+
+            // Build gallery array from all links sharing the same data-lightbox id.
+            document.querySelectorAll('[data-lightbox="' + galleryId + '"]').forEach(function (link) {
                 self.currentGallery.push({
-                    src: $(this).attr('href'),
-                    title: $(this).data('title') || ''
+                    src: link.href,
+                    title: link.dataset.title || '',
                 });
             });
-            
-            this.currentIndex = $clickedItem.closest('.gallery-item').data('index') || 0;
-            this.showLightboxImage();
-            
-            // Show lightbox with animation
-            this.$lightbox.css('display', 'flex');
-            $('body').css('overflow', 'hidden');
-            
-            // Trigger animation after a small delay to ensure display:flex is applied
-            setTimeout(function() {
-                self.$lightbox.addClass('active');
-            }, 10);
+
+            var item = clickedLink.closest('.agb-gallery-item');
+            this.currentIndex = item ? parseInt(item.dataset.index, 10) || 0 : 0;
+
+            // Store current focus for restoration on close.
+            this.previousFocus = document.activeElement;
+
+            this.showImage();
+
+            this.overlay.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+
+            requestAnimationFrame(function () {
+                self.overlay.classList.add('agb-active');
+                var closeBtn = self.overlay.querySelector('.agb-lightbox-close');
+                if (closeBtn) { closeBtn.focus(); }
+            });
         },
 
-        /**
-         * Close lightbox
-         */
-        closeLightbox: function() {
-            const self = this;
-            
-            // Start fade-out animation
-            this.$lightbox.removeClass('active');
-            $('body').css('overflow', '');
-            
-            // Hide lightbox after animation completes
-            setTimeout(function() {
-                self.$lightbox.css('display', 'none');
-                $('.lightbox-image').attr('src', '').attr('alt', '');
+        close: function () {
+            var self = this;
+
+            this.overlay.classList.remove('agb-active');
+            document.body.style.overflow = '';
+
+            setTimeout(function () {
+                self.overlay.style.display = 'none';
+                var img = self.overlay.querySelector('.agb-lightbox-image');
+                if (img) {
+                    img.src = '';
+                    img.alt = '';
+                }
+                // Restore focus to the element that opened the lightbox.
+                if (self.previousFocus) {
+                    self.previousFocus.focus();
+                    self.previousFocus = null;
+                }
             }, 300);
         },
 
-        /**
-         * Show previous image
-         */
-        previousImage: function() {
-            if (this.currentGallery.length > 1) {
-                this.currentIndex = (this.currentIndex > 0) ? this.currentIndex - 1 : this.currentGallery.length - 1;
-                this.showLightboxImage();
-            }
+        /* ------------------------------------------------------------------ */
+        /* Navigation                                                          */
+        /* ------------------------------------------------------------------ */
+
+        prev: function () {
+            if (this.currentGallery.length <= 1) { return; }
+            this.currentIndex = this.currentIndex > 0
+                ? this.currentIndex - 1
+                : this.currentGallery.length - 1;
+            this.showImage();
         },
 
-        /**
-         * Show next image
-         */
-        nextImage: function() {
-            if (this.currentGallery.length > 1) {
-                this.currentIndex = (this.currentIndex < this.currentGallery.length - 1) ? this.currentIndex + 1 : 0;
-                this.showLightboxImage();
-            }
+        next: function () {
+            if (this.currentGallery.length <= 1) { return; }
+            this.currentIndex = this.currentIndex < this.currentGallery.length - 1
+                ? this.currentIndex + 1
+                : 0;
+            this.showImage();
         },
 
-        /**
-         * Preload adjacent images for instant switching
-         */
-        preloadAdjacentImages: function() {
-            const self = this;
-            const nextIndex = (this.currentIndex < this.currentGallery.length - 1) ? this.currentIndex + 1 : 0;
-            const prevIndex = (this.currentIndex > 0) ? this.currentIndex - 1 : this.currentGallery.length - 1;
-            
-            [nextIndex, prevIndex].forEach(function(index) {
-                const item = self.currentGallery[index];
+        /* ------------------------------------------------------------------ */
+        /* Image display & preloading                                          */
+        /* ------------------------------------------------------------------ */
+
+        preloadAdjacent: function () {
+            var self = this;
+            var len = this.currentGallery.length;
+            var nextIdx = (this.currentIndex + 1) % len;
+            var prevIdx = (this.currentIndex - 1 + len) % len;
+
+            [nextIdx, prevIdx].forEach(function (idx) {
+                var item = self.currentGallery[idx];
                 if (item && !self.imageCache[item.src]) {
-                    const img = new Image();
-                    img.onload = function() {
+                    var img = new Image();
+                    img.onload = function () {
                         self.imageCache[item.src] = true;
                     };
                     img.src = item.src;
@@ -184,41 +266,40 @@
             });
         },
 
-        /**
-         * Display current image in lightbox with instant response
-         */
-        showLightboxImage: function() {
-            if (!this.currentGallery[this.currentIndex]) {
-                return;
-            }
-            
-            const self = this;
-            const item = this.currentGallery[this.currentIndex];
-            const $image = $('.lightbox-image');
-            
-            // Brief transition lock (150ms) for smooth fade
+        showImage: function () {
+            var item = this.currentGallery[this.currentIndex];
+            if (!item) { return; }
+
+            var self  = this;
+            var image = this.overlay.querySelector('.agb-lightbox-image');
+
+            // Brief transition lock for smooth fade.
             this.isTransitioning = true;
-            setTimeout(function() {
-                self.isTransitioning = false;
-            }, 150);
-            
-            // Fade out current image
-            $image.css('opacity', '0');
-            
-            // Quick switch to new image
-            setTimeout(function() {
-                $image.attr('src', item.src).attr('alt', item.title || '');
-                
-                // Fade in new image
-                $image.css('opacity', '1');
-                
-                // Preload next/previous images
-                self.preloadAdjacentImages();
+            setTimeout(function () { self.isTransitioning = false; }, 150);
+
+            // Fade out → swap → fade in.
+            image.style.opacity = '0';
+            setTimeout(function () {
+                image.src = item.src;
+                image.alt = item.title || '';
+                image.style.opacity = '1';
+                self.preloadAdjacent();
             }, 100);
-            
-            // Show/hide navigation based on gallery length
-            $('.lightbox-prev, .lightbox-next').toggle(this.currentGallery.length > 1);
-        }
+
+            // Show / hide navigation based on gallery size.
+            var showNav = this.currentGallery.length > 1;
+            this.overlay.querySelector('.agb-lightbox-prev').style.display = showNav ? '' : 'none';
+            this.overlay.querySelector('.agb-lightbox-next').style.display = showNav ? '' : 'none';
+        },
     };
 
-})(jQuery);
+    /* ---------------------------------------------------------------------- */
+    /* Auto-initialize                                                        */
+    /* ---------------------------------------------------------------------- */
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function () { AGBLightbox.init(); });
+    } else {
+        AGBLightbox.init();
+    }
+})();
