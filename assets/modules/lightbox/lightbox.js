@@ -10,6 +10,8 @@
         touchStartX: 0,
         touchEndX: 0,
         previousFocus: null,
+        showTitle: true,
+        showDescription: false,
 
         init: function () {
             if (!document.querySelector('.agb-lightbox-enabled')) {
@@ -32,6 +34,10 @@
             overlay.innerHTML =
                 '<div class="agb-lightbox-container">' +
                     '<img class="agb-lightbox-image" src="" alt="">' +
+                '</div>' +
+                '<div class="agb-lightbox-info" aria-live="polite">' +
+                    '<p class="agb-lightbox-title"></p>' +
+                    '<p class="agb-lightbox-description"></p>' +
                 '</div>' +
                 '<button class="agb-lightbox-close" aria-label="Lightbox sluiten">' +
                     '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>' +
@@ -147,11 +153,15 @@
             var galleryId = clickedLink.dataset.lightbox;
             var self = this;
             this.currentGallery = [];
+            var galleryEl = document.getElementById(galleryId);
+            this.showTitle = galleryEl ? galleryEl.dataset.lightboxShowTitle === '1' : true;
+            this.showDescription = galleryEl ? galleryEl.dataset.lightboxShowDescription === '1' : false;
 
             document.querySelectorAll('[data-lightbox="' + galleryId + '"]').forEach(function (link) {
                 self.currentGallery.push({
                     src: link.href,
                     title: link.dataset.title || '',
+                    description: link.dataset.description || '',
                 });
             });
 
@@ -231,17 +241,34 @@
 
             var self  = this;
             var image = this.overlay.querySelector('.agb-lightbox-image');
+            var inCache = !!this.imageCache[item.src];
+            var titleEl = this.overlay.querySelector('.agb-lightbox-title');
+            var descEl = this.overlay.querySelector('.agb-lightbox-description');
+            var infoEl = this.overlay.querySelector('.agb-lightbox-info');
 
             this.isTransitioning = true;
-            setTimeout(function () { self.isTransitioning = false; }, 150);
+            setTimeout(function () { self.isTransitioning = false; }, inCache ? 0 : 100);
+
+            if (titleEl && descEl && infoEl) {
+                var titleText = this.showTitle && item.title ? item.title : '';
+                var descText = this.showDescription && item.description ? item.description : '';
+                titleEl.textContent = titleText;
+                descEl.textContent = descText;
+                infoEl.style.display = (titleText || descText) ? '' : 'none';
+            }
 
             image.style.opacity = '0';
             setTimeout(function () {
+                image.onload = null;
                 image.src = item.src;
                 image.alt = item.title || '';
-                image.style.opacity = '1';
+                if (inCache) {
+                    image.style.opacity = '1';
+                } else {
+                    image.onload = function () { image.style.opacity = '1'; };
+                }
                 self.preloadAdjacent();
-            }, 100);
+            }, inCache ? 0 : 100);
 
             var showNav = this.currentGallery.length > 1;
             this.overlay.querySelector('.agb-lightbox-prev').style.display = showNav ? '' : 'none';

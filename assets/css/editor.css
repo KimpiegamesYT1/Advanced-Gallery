@@ -43,11 +43,11 @@
     cursor: default;
 }
 
-.agb-gallery .agb-gallery-link {
+.block-editor-block-preview .agb-gallery .agb-gallery-link {
     pointer-events: none;
 }
 
-.agb-hover-overlay {
+.block-editor-block-preview .agb-hover-overlay {
     display: none !important;
 }
 

@@ -19,7 +19,24 @@
     "attributes": {
         "images": {
             "type": "array",
-            "default": []
+            "default": [],
+            "items": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "number"
+                    },
+                    "url": {
+                        "type": "string"
+                    },
+                    "alt": {
+                        "type": "string"
+                    },
+                    "caption": {
+                        "type": "string"
+                    }
+                }
+            }
         },
         "columns": {
             "type": "number",
@@ -44,6 +61,14 @@
         "enableLightbox": {
             "type": "boolean",
             "default": true
+        },
+        "showLightboxTitle": {
+            "type": "boolean",
+            "default": true
+        },
+        "showLightboxDescription": {
+            "type": "boolean",
+            "default": false
         },
         "showCaptions": {
             "type": "boolean",

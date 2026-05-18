@@ -50,6 +50,14 @@ class AdvancedGalleryBlock {
             array(),
             ADVANCED_GALLERY_BLOCK_VERSION
         );
+
+        wp_register_script(
+            'agb-gallery',
+            ADVANCED_GALLERY_BLOCK_PLUGIN_URL . 'assets/js/gallery.js',
+            array(),
+            ADVANCED_GALLERY_BLOCK_VERSION,
+            true
+        );
     }
 
     public function render_block( $attributes ) {
@@ -61,6 +69,8 @@ class AdvancedGalleryBlock {
         $hover_effect    = sanitize_key( $attributes['hoverEffect'] ?? 'none' );
         $animation       = sanitize_key( $attributes['animation'] ?? 'none' );
         $enable_lightbox = (bool) ( $attributes['enableLightbox'] ?? true );
+        $show_lightbox_title       = (bool) ( $attributes['showLightboxTitle'] ?? true );
+        $show_lightbox_description = (bool) ( $attributes['showLightboxDescription'] ?? false );
         $show_captions   = (bool) ( $attributes['showCaptions'] ?? false );
         $enable_masonry  = (bool) ( $attributes['enableMasonry'] ?? true );
 
@@ -78,6 +88,8 @@ class AdvancedGalleryBlock {
         $gap            = max( 0, intval( $attributes['gap'] ?? 10 ) );
         $gap_mobile     = max( 0, intval( $attributes['gapMobile'] ?? 10 ) );
         $border_radius  = max( 0, intval( $attributes['borderRadius'] ?? 0 ) );
+
+        wp_enqueue_script( 'agb-gallery' );
 
         if ( $enable_lightbox ) {
             wp_enqueue_script( 'agb-lightbox' );
@@ -113,6 +125,8 @@ class AdvancedGalleryBlock {
         <div id="<?php echo esc_attr( $gallery_id ); ?>"
              class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>"
              style="<?php echo esc_attr( implode( '; ', $style_vars ) ); ?>"
+               data-lightbox-show-title="<?php echo $show_lightbox_title ? '1' : '0'; ?>"
+               data-lightbox-show-description="<?php echo $show_lightbox_description ? '1' : '0'; ?>"
              role="region"
              aria-label="Afbeeldingen galerij">
             <?php foreach ( $images as $index => $image ) :
@@ -124,6 +138,8 @@ class AdvancedGalleryBlock {
                 $img_full_url = wp_get_attachment_image_url( $img_id, 'full' );
                 $img_alt      = get_post_meta( $img_id, '_wp_attachment_image_alt', true );
                 $img_caption  = wp_get_attachment_caption( $img_id );
+                $img_description = get_post_field( 'post_content', $img_id );
+                $img_description = trim( wp_strip_all_tags( (string) $img_description ) );
 
                 if ( ! $img_full_url ) {
                     continue;
@@ -157,13 +173,14 @@ class AdvancedGalleryBlock {
                            class="agb-gallery-link"
                            data-lightbox="<?php echo esc_attr( $gallery_id ); ?>"
                            data-title="<?php echo esc_attr( $img_caption ); ?>"
+                              data-description="<?php echo esc_attr( $img_description ); ?>"
                            aria-label="<?php echo esc_attr( sprintf( 'Open afbeelding %1$d in lightbox: %2$s', $index + 1, $img_alt ) ); ?>"
                            role="button">
                     <?php endif; ?>
 
                     <div class="agb-image-container">
                         <?php echo wp_get_attachment_image( $img_id, 'large', false, $img_attrs ); ?>
-                        <?php if ( 'none' !== $hover_effect && $enable_lightbox ) : ?>
+                        <?php if ( 'none' !== $hover_effect ) : ?>
                             <div class="agb-hover-overlay">
                                 <div class="agb-hover-content">
                                     <span class="agb-expand-icon" aria-hidden="true">&#x2922;</span>

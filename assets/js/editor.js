@@ -109,6 +109,21 @@
                             onChange: function (v) { set({ enableLightbox: v }); },
                         }),
                         el(ToggleControl, {
+                            label: 'Lightbox Titel Tonen',
+                            checked: attr.showLightboxTitle,
+                            onChange: function (v) { set({ showLightboxTitle: v }); },
+                        }),
+                        el(ToggleControl, {
+                            label: 'Lightbox Beschrijving Tonen',
+                            checked: attr.showLightboxDescription,
+                            onChange: function (v) { set({ showLightboxDescription: v }); },
+                        }),
+                        el(ToggleControl, {
+                            label: 'Masonry Inschakelen',
+                            checked: attr.enableMasonry,
+                            onChange: function (v) { set({ enableMasonry: v }); },
+                        }),
+                        el(ToggleControl, {
                             label: 'Bijschriften Tonen',
                             checked: attr.showCaptions,
                             onChange: function (v) { set({ showCaptions: v }); },
@@ -131,7 +146,7 @@
                                 value: attr.images.map(function (img) { return img.id; }),
                                 render: function (ref) {
                                     return el(Button, {
-                                        isPrimary: true,
+                                        variant: 'primary',
                                         onClick: ref.open,
                                         className: 'agb-editor-button',
                                     }, 'Afbeeldingen Selecteren');
@@ -162,7 +177,7 @@
                                     value: attr.images.map(function (img) { return img.id; }),
                                     render: function (ref) {
                                         return el(Button, {
-                                            isSecondary: true,
+                                            variant: 'secondary',
                                             onClick: ref.open,
                                         }, 'Afbeeldingen Bewerken');
                                     },

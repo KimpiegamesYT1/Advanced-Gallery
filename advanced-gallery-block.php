@@ -22,12 +22,6 @@ define( 'ADVANCED_GALLERY_BLOCK_VERSION', '2.0.0' );
 define( 'ADVANCED_GALLERY_BLOCK_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'ADVANCED_GALLERY_BLOCK_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 
-require_once ADVANCED_GALLERY_BLOCK_PLUGIN_DIR . 'includes/class-advanced-gallery-block.php';
-
-add_action( 'plugins_loaded', function () {
-    AdvancedGalleryBlock::get_instance();
-} );
-
 if ( version_compare( PHP_VERSION, '7.4', '<' ) ) {
     add_action( 'admin_notices', function () {
         printf(
@@ -35,4 +29,11 @@ if ( version_compare( PHP_VERSION, '7.4', '<' ) ) {
             esc_html( sprintf( 'Advanced Gallery Block vereist PHP 7.4 of hoger. Je huidige versie is %s.', PHP_VERSION ) )
         );
     } );
+    return;
 }
+
+require_once ADVANCED_GALLERY_BLOCK_PLUGIN_DIR . 'includes/class-advanced-gallery-block.php';
+
+add_action( 'plugins_loaded', function () {
+    AdvancedGalleryBlock::get_instance();
+} );

@@ -6,7 +6,7 @@
     "license": "GPL-2.0-or-later",
     "private": true,
     "scripts": {
-        "build": "wp-scripts build",
+        "build": "wp-scripts build assets/js/editor.js assets/js/gallery.js assets/modules/lightbox/lightbox.js",
         "start": "wp-scripts start",
         "lint:css": "wp-scripts lint-style 'assets/css/**/*.css' 'assets/modules/**/*.css'",
         "lint:js": "wp-scripts lint-js 'assets/js/**/*.js' 'assets/modules/**/*.js'",
