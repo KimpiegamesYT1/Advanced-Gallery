@@ -1,4 +1,8 @@
 <?php
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 return array(
     'dependencies' => array(
         'wp-blocks',
@@ -6,5 +10,5 @@ return array(
         'wp-components',
         'wp-block-editor',
     ),
-    'version' => ADVANCED_GALLERY_BLOCK_VERSION ?? '2.0.0',
+    'version' => ADVANCED_GALLERY_BLOCK_VERSION,
 );

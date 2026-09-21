@@ -62,11 +62,11 @@ class AdvancedGalleryBlock {
 
     public function render_block( $attributes ) {
         $images = $attributes['images'] ?? array();
-        if ( empty( $images ) ) {
+        if ( empty( $images ) || ! is_array( $images ) ) {
             return '';
         }
 
-        $hover_effect    = sanitize_key( $attributes['hoverEffect'] ?? 'none' );
+        $hover_effect   = sanitize_key( $attributes['hoverEffect'] ?? 'none' );
         $animation       = sanitize_key( $attributes['animation'] ?? 'none' );
         $enable_lightbox = (bool) ( $attributes['enableLightbox'] ?? true );
         $show_lightbox_title       = (bool) ( $attributes['showLightboxTitle'] ?? true );
@@ -82,12 +82,12 @@ class AdvancedGalleryBlock {
             );
         }
 
-        $columns        = max( 1, intval( $attributes['columns'] ?? 3 ) );
-        $columns_tablet = max( 1, intval( $attributes['columnsTablet'] ?? 2 ) );
-        $columns_mobile = max( 1, intval( $attributes['columnsMobile'] ?? 1 ) );
-        $gap            = max( 0, intval( $attributes['gap'] ?? 10 ) );
-        $gap_mobile     = max( 0, intval( $attributes['gapMobile'] ?? 10 ) );
-        $border_radius  = max( 0, intval( $attributes['borderRadius'] ?? 0 ) );
+        $columns        = min( 12, max( 1, intval( $attributes['columns'] ?? 3 ) ) );
+        $columns_tablet = min( 8, max( 1, intval( $attributes['columnsTablet'] ?? 2 ) ) );
+        $columns_mobile = min( 6, max( 1, intval( $attributes['columnsMobile'] ?? 1 ) ) );
+        $gap            = min( 100, max( 0, intval( $attributes['gap'] ?? 10 ) ) );
+        $gap_mobile     = min( 100, max( 0, intval( $attributes['gapMobile'] ?? 10 ) ) );
+        $border_radius  = min( 200, max( 0, intval( $attributes['borderRadius'] ?? 0 ) ) );
 
         wp_enqueue_script( 'agb-gallery' );
 
@@ -118,7 +118,44 @@ class AdvancedGalleryBlock {
             '--agb-border-radius: '   . $border_radius . 'px',
         );
 
-        $image_count = count( $images );
+        $ids = array();
+        foreach ( $images as $image ) {
+            if ( is_array( $image ) && isset( $image['id'] ) && is_numeric( $image['id'] ) ) {
+                $ids[] = intval( $image['id'] );
+            }
+        }
+
+        // Laad alle attachments en hun meta in één keer, in plaats van per afbeelding een query.
+        if ( $ids && function_exists( '_prime_post_caches' ) ) {
+            _prime_post_caches( $ids, false, true );
+        }
+
+        $need_caption     = $show_captions || $enable_lightbox;
+        $need_description = $enable_lightbox && $show_lightbox_description;
+
+        $items = array();
+        foreach ( $ids as $img_id ) {
+            $img_full_url = wp_get_attachment_image_url( $img_id, 'full' );
+            if ( ! $img_full_url ) {
+                continue;
+            }
+
+            $items[] = array(
+                'id'          => $img_id,
+                'full_url'    => $img_full_url,
+                'alt'         => get_post_meta( $img_id, '_wp_attachment_image_alt', true ),
+                'caption'     => $need_caption ? wp_get_attachment_caption( $img_id ) : '',
+                'description' => $need_description
+                    ? trim( wp_strip_all_tags( (string) get_post_field( 'post_content', $img_id ) ) )
+                    : '',
+            );
+        }
+
+        if ( empty( $items ) ) {
+            return '';
+        }
+
+        $image_count = count( $items );
 
         ob_start();
         ?>
@@ -129,21 +166,12 @@ class AdvancedGalleryBlock {
                data-lightbox-show-description="<?php echo $show_lightbox_description ? '1' : '0'; ?>"
              role="region"
              aria-label="Afbeeldingen galerij">
-            <?php foreach ( $images as $index => $image ) :
-                if ( ! isset( $image['id'] ) || ! is_numeric( $image['id'] ) ) {
-                    continue;
-                }
-
-                $img_id       = intval( $image['id'] );
-                $img_full_url = wp_get_attachment_image_url( $img_id, 'full' );
-                $img_alt      = get_post_meta( $img_id, '_wp_attachment_image_alt', true );
-                $img_caption  = wp_get_attachment_caption( $img_id );
-                $img_description = get_post_field( 'post_content', $img_id );
-                $img_description = trim( wp_strip_all_tags( (string) $img_description ) );
-
-                if ( ! $img_full_url ) {
-                    continue;
-                }
+            <?php foreach ( $items as $index => $item ) :
+                $img_id          = $item['id'];
+                $img_full_url    = $item['full_url'];
+                $img_alt         = $item['alt'];
+                $img_caption     = $item['caption'];
+                $img_description = $item['description'];
 
                 if ( empty( $img_alt ) ) {
                     $img_alt = $img_caption
@@ -152,16 +180,9 @@ class AdvancedGalleryBlock {
                 }
 
                 $img_attrs = array(
-                    'class'   => 'agb-gallery-image',
-                    'loading' => $index < $columns ? 'eager' : 'lazy',
-                    'alt'     => $img_alt,
+                    'class' => 'agb-gallery-image',
+                    'alt'   => $img_alt,
                 );
-
-                if ( $index < $columns ) {
-                    $img_attrs['fetchpriority'] = 'high';
-                } else {
-                    $img_attrs['decoding'] = 'async';
-                }
                 ?>
                 <div class="agb-gallery-item"
                      data-index="<?php echo esc_attr( $index ); ?>"
@@ -173,7 +194,7 @@ class AdvancedGalleryBlock {
                            class="agb-gallery-link"
                            data-lightbox="<?php echo esc_attr( $gallery_id ); ?>"
                            data-title="<?php echo esc_attr( $img_caption ); ?>"
-                              data-description="<?php echo esc_attr( $img_description ); ?>"
+                           <?php if ( '' !== $img_description ) : ?>data-description="<?php echo esc_attr( $img_description ); ?>"<?php endif; ?>
                            aria-label="<?php echo esc_attr( sprintf( 'Open afbeelding %1$d in lightbox: %2$s', $index + 1, $img_alt ) ); ?>"
                            role="button">
                     <?php endif; ?>

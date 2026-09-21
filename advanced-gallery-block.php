@@ -3,13 +3,13 @@
  * Plugin Name: Advanced Gallery Block
  * Plugin URI: https://floriswebdesign.nl/
  * Description: Een geavanceerde galerij block voor Gutenberg met responsive instellingen, meerdere layouts en lightbox.
- * Version: 2.0.0
+ * Version: 2.2.0
  * Author: FlorisWebDesign
  * Author URI: https://floriswebdesign.nl
  * License: GPL v2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: advanced-gallery-block
- * Requires at least: 5.8
+ * Requires at least: 6.3
  * Tested up to: 6.7
  * Requires PHP: 7.4
  */
@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-define( 'ADVANCED_GALLERY_BLOCK_VERSION', '2.0.0' );
+define( 'ADVANCED_GALLERY_BLOCK_VERSION', '2.2.0' );
 define( 'ADVANCED_GALLERY_BLOCK_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'ADVANCED_GALLERY_BLOCK_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 

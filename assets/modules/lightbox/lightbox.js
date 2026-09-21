@@ -8,21 +8,29 @@
         isTransitioning: false,
         imageCache: {},
         touchStartX: 0,
+        touchStartY: 0,
         touchEndX: 0,
+        touchEndY: 0,
+        closeTimer: null,
+        previousOverflow: '',
         previousFocus: null,
         showTitle: true,
         showDescription: false,
 
         init: function () {
-            if (!document.querySelector('.agb-lightbox-enabled')) {
-                return;
-            }
-            this.createHTML();
             this.bindEvents();
         },
 
+        ensureOverlay: function () {
+            if (this.overlay) { return; }
+            this.createHTML();
+            this.bindOverlayEvents();
+        },
+
         createHTML: function () {
-            if (document.querySelector('.agb-lightbox-overlay')) {
+            var existing = document.querySelector('.agb-lightbox-overlay');
+            if (existing) {
+                this.overlay = existing;
                 return;
             }
 
@@ -63,6 +71,10 @@
                     self.open(link);
                 }
             });
+        },
+
+        bindOverlayEvents: function () {
+            var self = this;
 
             this.overlay.addEventListener('click', function (e) {
                 if (
@@ -105,10 +117,12 @@
 
             this.overlay.addEventListener('touchstart', function (e) {
                 self.touchStartX = e.changedTouches[0].screenX;
+                self.touchStartY = e.changedTouches[0].screenY;
             }, { passive: true });
 
             this.overlay.addEventListener('touchend', function (e) {
                 self.touchEndX = e.changedTouches[0].screenX;
+                self.touchEndY = e.changedTouches[0].screenY;
                 self.handleSwipe();
             }, { passive: true });
         },
@@ -116,8 +130,11 @@
         handleSwipe: function () {
             var threshold = 50;
             var diff = this.touchStartX - this.touchEndX;
+            var diffY = this.touchStartY - this.touchEndY;
 
+            if (this.isTransitioning) { return; }
             if (Math.abs(diff) < threshold) { return; }
+            if (Math.abs(diffY) > Math.abs(diff)) { return; }
 
             if (diff > 0) {
                 this.next();
@@ -150,28 +167,34 @@
         },
 
         open: function (clickedLink) {
-            var galleryId = clickedLink.dataset.lightbox;
             var self = this;
+            this.ensureOverlay();
+            clearTimeout(this.closeTimer);
             this.currentGallery = [];
-            var galleryEl = document.getElementById(galleryId);
+
+            var galleryEl = clickedLink.closest('.agb-gallery');
             this.showTitle = galleryEl ? galleryEl.dataset.lightboxShowTitle === '1' : true;
             this.showDescription = galleryEl ? galleryEl.dataset.lightboxShowDescription === '1' : false;
 
-            document.querySelectorAll('[data-lightbox="' + galleryId + '"]').forEach(function (link) {
+            var links = galleryEl ? galleryEl.querySelectorAll('.agb-gallery-link') : [clickedLink];
+            var clickedIndex = 0;
+            Array.prototype.forEach.call(links, function (link, i) {
+                if (link === clickedLink) { clickedIndex = i; }
                 self.currentGallery.push({
                     src: link.href,
                     title: link.dataset.title || '',
                     description: link.dataset.description || '',
                 });
             });
-
-            var item = clickedLink.closest('.agb-gallery-item');
-            this.currentIndex = item ? parseInt(item.dataset.index, 10) || 0 : 0;
+            this.currentIndex = clickedIndex;
 
             this.previousFocus = document.activeElement;
             this.showImage();
 
             this.overlay.style.display = 'flex';
+            if (!this.overlay.classList.contains('agb-active')) {
+                this.previousOverflow = document.body.style.overflow;
+            }
             document.body.style.overflow = 'hidden';
 
             requestAnimationFrame(function () {
@@ -185,12 +208,15 @@
             var self = this;
 
             this.overlay.classList.remove('agb-active');
-            document.body.style.overflow = '';
+            document.body.style.overflow = this.previousOverflow;
 
-            setTimeout(function () {
+            clearTimeout(this.closeTimer);
+            this.closeTimer = setTimeout(function () {
                 self.overlay.style.display = 'none';
                 var img = self.overlay.querySelector('.agb-lightbox-image');
                 if (img) {
+                    img.onload = null;
+                    img.onerror = null;
                     img.src = '';
                     img.alt = '';
                 }
@@ -260,12 +286,14 @@
             image.style.opacity = '0';
             setTimeout(function () {
                 image.onload = null;
+                image.onerror = null;
                 image.src = item.src;
                 image.alt = item.title || '';
                 if (inCache) {
                     image.style.opacity = '1';
                 } else {
                     image.onload = function () { image.style.opacity = '1'; };
+                    image.onerror = function () { image.style.opacity = '1'; };
                 }
                 self.preloadAdjacent();
             }, inCache ? 0 : 100);

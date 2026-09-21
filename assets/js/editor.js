@@ -3,6 +3,7 @@
     var MediaUpload       = blockEditor.MediaUpload;
     var MediaUploadCheck  = blockEditor.MediaUploadCheck;
     var InspectorControls = blockEditor.InspectorControls;
+    var useBlockProps     = blockEditor.useBlockProps;
     var PanelBody     = components.PanelBody;
     var RangeControl  = components.RangeControl;
     var SelectControl = components.SelectControl;
@@ -136,7 +137,7 @@
                     )
                 ),
 
-                el('div', { className: 'agb-editor' },
+                el('div', useBlockProps({ className: 'agb-editor' }),
                     attr.images.length === 0
                         ? el(MediaUploadCheck, {},
                             el(MediaUpload, {

@@ -31,7 +31,7 @@ A WordPress Gutenberg block for creating responsive image galleries with lightbo
 
 ## Requirements
 
-- WordPress 5.0+
+- WordPress 6.3+
 - PHP 7.4+
 
 ## License
